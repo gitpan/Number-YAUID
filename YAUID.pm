@@ -5,7 +5,7 @@ use strict;
 use vars qw($AUTOLOAD $VERSION $ABSTRACT @ISA @EXPORT);
 
 BEGIN {
-	$VERSION = 1.32;
+	$VERSION = 1.33;
 	$ABSTRACT = "A decentralized unique ID generator (int64)";
 	
 	@ISA = qw(Exporter DynaLoader);
@@ -91,7 +91,7 @@ Number::YAUID - A decentralized unique ID generator (int64)
  my $object = Number::YAUID->new("/tmp/lock.file", "/etc/node.id");
  # OR
  #my $object = Number::YAUID->new("/tmp/lock.file", undef, node_id => 321);
- die get_error_text_by_code($object->get_error_code()) if $object->get_error_code();
+ die get_error_text_by_code($object) unless ref $object;
  
  print "Max inc on sec: ", get_max_inc(), "\n";
  print "Max node id: ", get_max_node_id(), "\n";
