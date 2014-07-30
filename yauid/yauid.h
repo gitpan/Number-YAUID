@@ -33,24 +33,6 @@
 // 64 bit
 typedef uint64_t hkey_t;
 
-char error_text[][64] = {
-    "OK",
-    "Can't create key file",
-    "Can't open key file",
-    "All key in current sec done",
-    "Can't read size for file node_id",
-    "Can't allocate memory for node_id",
-    "File node_id not exists",
-    "Can't set lock",
-    "Node_id is to long",
-    "Can't read key from file",
-    "Can't seek to start file position",
-    "Can't write key to file",
-    "Can't flush key to file",
-    "Number of attempts to get the key exhausted",
-    "Can't create yauid object"
-};
-
 enum yauid_status {
     YAUID_OK                    = 0,
     YAUID_ERROR_CREATE_KEY_FILE = 1,

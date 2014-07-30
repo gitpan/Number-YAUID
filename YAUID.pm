@@ -1,16 +1,18 @@
 package Number::YAUID;
 
+use utf8;
 use strict;
 use vars qw($AUTOLOAD $VERSION $ABSTRACT @ISA @EXPORT);
 
 BEGIN {
-	$VERSION = 1.31;
+	$VERSION = 1.32;
 	$ABSTRACT = "A decentralized unique ID generator (int64)";
 	
 	@ISA = qw(Exporter DynaLoader);
 	@EXPORT = qw(
 		get_error_text_by_code
 		get_max_inc get_max_node_id get_max_timestamp
+		timestamp_to_datetime
 	);
 };
 
@@ -38,6 +40,12 @@ sub new {
 	
 	if(ref $self)
 	{
+		if(my $error = $self->get_error_code())
+		{
+			undef $self;
+			return $error;
+		}
+		
 		foreach my $pname (keys %args)
 		{
 			my $sub_name = "set_$pname";
@@ -49,9 +57,22 @@ sub new {
 			$self->set_node_id($node_id);
 		}
 	}
+	else {
+		return YAUID_ERROR_CREATE_OBJECT();
+	}
 	
 	$self;
 }
+
+sub timestamp_to_datetime {
+	my @parts = (localtime( $_[0] || time ))[0..5];
+	
+	$parts[4] += 1;
+	$parts[5] += 1900;
+	
+	sprintf("%04d-%02d-%02d %02d:%02d:%02d", reverse @parts);
+}
+
 
 1;
 
@@ -82,7 +103,7 @@ Number::YAUID - A decentralized unique ID generator (int64)
  	die get_error_text_by_code($object->get_error_code()) if $object->get_error_code();
  	
  	print "key: ", $key, "\n";
- 	print "\ttimestamp: ", $object->get_timestamp_by_key($key), "\n";
+ 	print "\ttimestamp: ", timestamp_to_datetime( $object->get_timestamp_by_key($key) ), "\n";
   	print "\tnode id: "  , $object->get_node_id_by_key($key)  , "\n";
  	print "\tinc id: "   , $object->get_inc_id_by_key($key)   , "\n";
  }
@@ -143,6 +164,12 @@ Return node id from a key
  $object->get_inc_id_by_key(<key>);
 
 Return inc id from a key
+
+=head2 timestamp_to_datetime
+
+ timestamp_to_datetime(<timestamp>);
+
+Convert timestamp to datetime (YYYY-MM-DD hh:mm:ss)
 
 =head1 DESTROY
 

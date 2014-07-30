@@ -1,12 +1,12 @@
 {
-   "abstract" : "YAUID.pm",
+   "abstract" : "A decentralized unique ID generator (int64)",
    "author" : [
       "Alexander Borisov <lex.borisov@gmail.com>"
    ],
    "dynamic_config" : 1,
    "generated_by" : "ExtUtils::MakeMaker version 6.64, CPAN::Meta::Converter version 2.112621",
    "license" : [
-      "unknown"
+      "perl_5"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
@@ -35,5 +35,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "1.31"
+   "version" : "1.32"
 }

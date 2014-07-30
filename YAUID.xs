@@ -11,8 +11,26 @@
 #include <yauid.h>
 
 #ifdef ENVIRONMENT32
-#error Only 64 bit system
+#error 64 bit system only
 #else
+
+char error_text[][64] = {
+    "OK",
+    "Can't create lock (key) file",
+    "Can't open lock (key) file",
+    "All key in current sec done",
+    "Can't read size for file node_id",
+    "Can't allocate memory for node_id",
+    "File node_id not exists",
+    "Can't set lock",
+    "Node_id is to long",
+    "Can't read key from file",
+    "Can't seek to start file position",
+    "Can't write key to file",
+    "Can't flush key to file",
+    "Number of attempts to get the key exhausted",
+    "Can't create yauid object"
+};
 
 unsigned long yauid_get_inc_id(hkey_t key)
 {
@@ -201,7 +219,7 @@ yauid * yauid_init(const char *filepath_key, const char *filepath_node_id)
         
         if(filepath_node_id != NULL)
         {
-            if(access( filepath_node_id, F_OK ) != -1)
+            if(access( filepath_node_id, F_OK ) == 0)
             {
                 FILE* h_node_id;
                 if((h_node_id = fopen(filepath_node_id, "rb")))
@@ -245,7 +263,7 @@ yauid * yauid_init(const char *filepath_key, const char *filepath_node_id)
             }
         }
         
-        if(access( yaobj->c_lockfile, F_OK ) == -1)
+        if(access( yaobj->c_lockfile, F_OK ) != 0)
         {
             if((yaobj->h_lockfile = fopen(yaobj->c_lockfile, "ab")) == 0)
             {
@@ -283,7 +301,7 @@ void yauid_destroy(yauid* yaobj)
 
 char * yauid_get_error_text_by_code(enum yauid_status error)
 {
-    if((YAUID_ERROR_TRY_COUNT_KEY - YAUID_OK) < error)
+    if((YAUID_ERROR_CREATE_OBJECT - YAUID_OK) < error)
         return NULL;
     
     return error_text[error];
@@ -484,3 +502,14 @@ get_max_timestamp()
 		RETVAL = newSViv( yauid_get_max_timestamp() );
 	OUTPUT:
 		RETVAL
+
+
+
+SV*
+YAUID_ERROR_CREATE_OBJECT()
+	CODE:
+		RETVAL = newSViv( YAUID_ERROR_CREATE_OBJECT );
+	OUTPUT:
+		RETVAL
+
+

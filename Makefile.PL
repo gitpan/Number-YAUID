@@ -5,8 +5,9 @@ use ExtUtils::MakeMaker;
 
 WriteMakefile(
 	AUTHOR         => 'Alexander Borisov <lex.borisov@gmail.com>',
-	ABSTRACT       => 'YAUID.pm',
+	ABSTRACT_FROM  => 'YAUID.pm',
     VERSION_FROM   => 'YAUID.pm',
     NAME           => 'Number::YAUID',
+	LICENSE        => 'perl',
 	INC            => '-I'. $FindBin::Bin ."/yauid",
 );
