@@ -64,6 +64,11 @@ struct yauid {
 }
 typedef yauid;
 
+struct yauid_period_key {
+    hkey_t min;
+    hkey_t max;
+};
+
 yauid * yauid_init(const char *filepath_key, const char *filepath_node_id);
 void yauid_destroy(yauid* yaobj);
 
@@ -81,6 +86,20 @@ unsigned long yauid_get_inc_id(hkey_t key);
 unsigned long long int yauid_get_max_inc();
 unsigned long long int yauid_get_max_node_id();
 unsigned long long int yauid_get_max_timestamp();
+
+// "2014-07-12 04:23:12" => 1405124592
+time_t yauid_datetime_to_timestamp(const char *datetime);
+void yauid_get_period_key_by_timestamp(time_t from_timestamp,
+                                       time_t to_timestamp,
+                                       unsigned long long int from_node_id,
+                                       unsigned long long int to_node_id,
+                                       struct yauid_period_key *pkey);
+
+void yauid_get_period_key_by_datetime(const char *from_datetime,
+                                      const char *to_datetime,
+                                      unsigned long long int from_node_id,
+                                      unsigned long long int to_node_id,
+                                      struct yauid_period_key *pkey);
 
 char * yauid_get_error_text_by_code(enum yauid_status error);
 

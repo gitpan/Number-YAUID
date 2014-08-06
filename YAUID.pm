@@ -5,7 +5,7 @@ use strict;
 use vars qw($AUTOLOAD $VERSION $ABSTRACT @ISA @EXPORT);
 
 BEGIN {
-	$VERSION = 1.33;
+	$VERSION = 1.40;
 	$ABSTRACT = "A decentralized unique ID generator (int64)";
 	
 	@ISA = qw(Exporter DynaLoader);
@@ -13,6 +13,7 @@ BEGIN {
 		get_error_text_by_code
 		get_max_inc get_max_node_id get_max_timestamp
 		timestamp_to_datetime
+		get_period_key_by_timestamp get_period_key_by_datetime
 	);
 };
 
@@ -134,6 +135,58 @@ Create and prepare base structure. Return object or undef if something went wron
  my $key = $object->get_key();
 
 Return a unique ID
+
+=head2 get_period_key_by_datetime
+
+ my $key = $object->get_period_key_by_datetime(<from datetime>, <to datetime>, <from node ID>, <to node ID>);
+
+=over 4
+
+=item from datetime
+
+YYYY-MM-DD hh:mm:ss
+
+=item to datetime
+
+YYYY-MM-DD hh:mm:ss if <to datetime> = 0, then <to datetime> = <from datetime>
+
+=item from node ID
+
+1 to get_max_node_id() if <from node ID> = 0, then <from node ID> = 1
+
+=item to node ID
+
+1 to get_max_node_id() if <to node ID> = 0, then <to node ID> = get_max_node_id()
+
+=back
+
+Return arrey ref where [0] = min, [1] = max unique ID
+
+=head2 get_period_key_by_timestamp
+
+ my $key = $object->get_period_key_by_timestamp(<from timestamp>, <to timestamp>, <from node ID>, <to node ID>);
+
+=over 4
+
+=item from timestamp
+
+timestamp
+
+=item to timestamp
+
+timestamp if <to timestamp> = 0, then <to timestamp> = <from timestamp>
+
+=item from node ID
+
+1 to get_max_node_id() if <from node ID> = 0, then <from node ID> = 1
+
+=item to node ID
+
+1 to get_max_node_id() if <to node ID> = 0, then <to node ID> = get_max_node_id()
+
+=back
+
+Return arrey ref where [0] = min, [1] = max unique ID
 
 =head2 get_error_code
 

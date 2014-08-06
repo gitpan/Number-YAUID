@@ -1,3 +1,6 @@
+1.40	Wed Aug 06 2014 18:49:42 GMT+0400
+	+ Add function get_period_key_by_timestamp and get_period_key_by_datetime
+
 1.33	Wed Jul 30 2014 11:42:37 GMT+0400
 	+ Fix pod SYNOPSIS :)
 

@@ -70,6 +70,78 @@ unsigned long long int yauid_get_max_timestamp()
     return NUMBER_LIMIT_TIMESTAMP;
 }
 
+time_t yauid_datetime_to_timestamp(const char *datetime)
+{
+    struct tm tm;
+    time_t epoch;
+    
+    if(strptime(datetime, "%Y-%m-%d %H:%M:%S", &tm) != NULL)
+        epoch = mktime(&tm);
+    else
+        epoch = (time_t)(0);
+    
+    return epoch;
+}
+
+void yauid_get_period_key_by_datetime(const char *from_datetime,
+                          const char *to_datetime,
+                          unsigned long long int from_node_id,
+                          unsigned long long int to_node_id,
+                          struct yauid_period_key *pkey)
+{
+    if(to_datetime == NULL)
+        to_datetime = from_datetime;
+    
+    yauid_get_period_key_by_timestamp(yauid_datetime_to_timestamp(from_datetime),
+                                      yauid_datetime_to_timestamp(to_datetime),
+                                      from_node_id, to_node_id,
+                                      pkey);
+}
+
+void yauid_get_period_key_by_timestamp(time_t from_timestamp,
+                          time_t to_timestamp,
+                          unsigned long long int from_node_id,
+                          unsigned long long int to_node_id,
+                          struct yauid_period_key *pkey)
+{
+    if(pkey == NULL)
+        return;
+    
+    pkey->max = 0;
+    pkey->min = 0;
+    
+    if(to_timestamp == 0)
+        to_timestamp = from_timestamp;
+    
+    if(from_node_id == 0)
+        from_node_id = 1;
+    
+    if(to_node_id == 0)
+        to_node_id = NUMBER_LIMIT_NODE;
+    
+    pkey->min = (hkey_t)(from_timestamp);
+    if(pkey->min == 0)
+        return;
+    
+    pkey->min <<= BIT_LIMIT_NODE;
+    
+    pkey->min |= (hkey_t)(from_node_id);
+    pkey->min <<= BIT_LIMIT_INC;
+    
+    pkey->min |= (hkey_t)(1);
+    
+    pkey->max = (hkey_t)(to_timestamp);
+    if(pkey->max == 0)
+        return;
+    
+    pkey->max <<= BIT_LIMIT_NODE;
+    
+    pkey->max |= (hkey_t)(to_node_id);
+    pkey->max <<= BIT_LIMIT_INC;
+    
+    pkey->max |= (hkey_t)(NUMBER_LIMIT);
+}
+
 hkey_t yauid_get_key(yauid* yaobj)
 {
     hkey_t key = (hkey_t)(0);
@@ -379,6 +451,48 @@ get_key_once(obj)
 	
 	CODE:
 		RETVAL = newSViv(yauid_get_key_once(obj));
+		
+	OUTPUT:
+		RETVAL
+
+SV*
+get_period_key_by_datetime(from_date = 0, to_date = 0, from_node = 0, to_node = 0)
+	char* from_date;
+	char* to_date;
+	unsigned long from_node;
+	unsigned long to_node;
+	
+	CODE:
+		struct yauid_period_key pkey = {0};
+		yauid_get_period_key_by_datetime((const char *)(from_date), (const char *)(to_date),
+			(unsigned long long int)(from_node), (unsigned long long int)(to_node), &pkey);
+		
+		AV *res = newAV();
+		av_push(res, newSViv(pkey.min));
+		av_push(res, newSViv(pkey.max));
+		
+		RETVAL = newRV_noinc((SV*)res);
+		
+	OUTPUT:
+		RETVAL
+
+SV*
+get_period_key_by_timestamp(from_date = 0, to_date = 0, from_node = 0, to_node = 0)
+	unsigned long from_date;
+	unsigned long to_date;
+	unsigned long from_node;
+	unsigned long to_node;
+	
+	CODE:
+		struct yauid_period_key pkey = {0};
+		yauid_get_period_key_by_timestamp((time_t)(from_date), (time_t)(to_date),
+			(unsigned long long int)(from_node), (unsigned long long int)(to_node), &pkey);
+		
+		AV *res = newAV();
+		av_push(res, newSViv(pkey.min));
+		av_push(res, newSViv(pkey.max));
+		
+		RETVAL = newRV_noinc((SV*)res);
 		
 	OUTPUT:
 		RETVAL
