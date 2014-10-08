@@ -5,7 +5,7 @@ use strict;
 use vars qw($AUTOLOAD $VERSION $ABSTRACT @ISA @EXPORT);
 
 BEGIN {
-	$VERSION = 1.40;
+	$VERSION = 1.50;
 	$ABSTRACT = "A decentralized unique ID generator (int64)";
 	
 	@ISA = qw(Exporter DynaLoader);
@@ -138,7 +138,7 @@ Return a unique ID
 
 =head2 get_period_key_by_datetime
 
- my $key = $object->get_period_key_by_datetime(<from datetime>, <to datetime>, <from node ID>, <to node ID>);
+ my $key = get_period_key_by_datetime(<from datetime>, <to datetime>, <from node ID>, <to node ID>);
 
 =over 4
 
@@ -164,7 +164,7 @@ Return arrey ref where [0] = min, [1] = max unique ID
 
 =head2 get_period_key_by_timestamp
 
- my $key = $object->get_period_key_by_timestamp(<from timestamp>, <to timestamp>, <from node ID>, <to node ID>);
+ my $key = get_period_key_by_timestamp(<from timestamp>, <to timestamp>, <from node ID>, <to node ID>);
 
 =over 4
 

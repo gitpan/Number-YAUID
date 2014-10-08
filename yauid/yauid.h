@@ -21,9 +21,23 @@
 #define ENVIRONMENT32
 #endif
 
+// limits
+#ifndef LIMIT_MIN_NODE_ID
+#define LIMIT_MIN_NODE_ID    1L
+#endif
+
+#ifndef BIT_LIMIT
 #define BIT_LIMIT           64L
+#endif
+
+#ifndef BIT_LIMIT_TIMESTAMP
 #define BIT_LIMIT_TIMESTAMP 33L
-#define BIT_LIMIT_NODE      16L
+#endif
+
+#ifndef BIT_LIMIT_NODE
+#define BIT_LIMIT_NODE      14L
+#endif
+
 #define BIT_LIMIT_INC       (BIT_LIMIT - (BIT_LIMIT_TIMESTAMP + BIT_LIMIT_NODE))
 
 #define NUMBER_LIMIT           ((1L << BIT_LIMIT_INC) - 1)
@@ -43,12 +57,13 @@ enum yauid_status {
     YAUID_ERROR_FILE_NODE_EXT   = 6,
     YAUID_ERROR_FILE_LOCK       = 7,
     YAUID_ERROR_LONG_NODE_ID    = 8,
-    YAUID_ERROR_READ_KEY        = 9,
-    YAUID_ERROR_FILE_SEEK       = 10,
-    YAUID_ERROR_WRITE_KEY       = 11,
-    YAUID_ERROR_FLUSH_KEY       = 12,
-    YAUID_ERROR_TRY_COUNT_KEY   = 13,
-    YAUID_ERROR_CREATE_OBJECT   = 14
+    YAUID_ERROR_SHORT_NODE_ID   = 9,
+    YAUID_ERROR_READ_KEY        = 10,
+    YAUID_ERROR_FILE_SEEK       = 11,
+    YAUID_ERROR_WRITE_KEY       = 12,
+    YAUID_ERROR_FLUSH_KEY       = 13,
+    YAUID_ERROR_TRY_COUNT_KEY   = 14,
+    YAUID_ERROR_CREATE_OBJECT   = 15
 };
 
 struct yauid {
@@ -61,6 +76,7 @@ struct yauid {
     useconds_t sleep_usec;
     
     enum yauid_status error;
+    void *ext_value;
 }
 typedef yauid;
 

@@ -1,3 +1,7 @@
+1.50	Wed Oct 08 2014 17:11:25 GMT+0400
+	+ Change limits: max node id 65535 => 16383, max inc id 32767 => 131071
+	+ Add LIMIT_MIN_NODE_ID = 1
+
 1.40	Wed Aug 06 2014 18:49:42 GMT+0400
 	+ Add function get_period_key_by_timestamp and get_period_key_by_datetime
 

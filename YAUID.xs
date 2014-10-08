@@ -16,20 +16,21 @@
 
 char error_text[][64] = {
     "OK",
-    "Can't create lock (key) file",
-    "Can't open lock (key) file",
+    "Can't create key file",
+    "Can't open key file",
     "All key in current sec done",
     "Can't read size for file node_id",
     "Can't allocate memory for node_id",
     "File node_id not exists",
     "Can't set lock",
-    "Node_id is to long",
+    "Node_id is too long",
+    "Node_id is too short",
     "Can't read key from file",
     "Can't seek to start file position",
     "Can't write key to file",
     "Can't flush key to file",
     "Number of attempts to get the key exhausted",
-    "Can't create yauid object"
+    "Can't create object"
 };
 
 unsigned long yauid_get_inc_id(hkey_t key)
@@ -55,14 +56,14 @@ unsigned long yauid_get_timestamp(hkey_t key)
     return (unsigned long)(key);
 }
 
-unsigned long long int yauid_get_max_inc()
-{
-    return NUMBER_LIMIT;
-}
-
 unsigned long long int yauid_get_max_node_id()
 {
     return NUMBER_LIMIT_NODE;
+}
+
+unsigned long long int yauid_get_max_inc()
+{
+    return NUMBER_LIMIT;
 }
 
 unsigned long long int yauid_get_max_timestamp()
@@ -70,83 +71,11 @@ unsigned long long int yauid_get_max_timestamp()
     return NUMBER_LIMIT_TIMESTAMP;
 }
 
-time_t yauid_datetime_to_timestamp(const char *datetime)
-{
-    struct tm tm;
-    time_t epoch;
-    
-    if(strptime(datetime, "%Y-%m-%d %H:%M:%S", &tm) != NULL)
-        epoch = mktime(&tm);
-    else
-        epoch = (time_t)(0);
-    
-    return epoch;
-}
-
-void yauid_get_period_key_by_datetime(const char *from_datetime,
-                          const char *to_datetime,
-                          unsigned long long int from_node_id,
-                          unsigned long long int to_node_id,
-                          struct yauid_period_key *pkey)
-{
-    if(to_datetime == NULL)
-        to_datetime = from_datetime;
-    
-    yauid_get_period_key_by_timestamp(yauid_datetime_to_timestamp(from_datetime),
-                                      yauid_datetime_to_timestamp(to_datetime),
-                                      from_node_id, to_node_id,
-                                      pkey);
-}
-
-void yauid_get_period_key_by_timestamp(time_t from_timestamp,
-                          time_t to_timestamp,
-                          unsigned long long int from_node_id,
-                          unsigned long long int to_node_id,
-                          struct yauid_period_key *pkey)
-{
-    if(pkey == NULL)
-        return;
-    
-    pkey->max = 0;
-    pkey->min = 0;
-    
-    if(to_timestamp == 0)
-        to_timestamp = from_timestamp;
-    
-    if(from_node_id == 0)
-        from_node_id = 1;
-    
-    if(to_node_id == 0)
-        to_node_id = NUMBER_LIMIT_NODE;
-    
-    pkey->min = (hkey_t)(from_timestamp);
-    if(pkey->min == 0)
-        return;
-    
-    pkey->min <<= BIT_LIMIT_NODE;
-    
-    pkey->min |= (hkey_t)(from_node_id);
-    pkey->min <<= BIT_LIMIT_INC;
-    
-    pkey->min |= (hkey_t)(1);
-    
-    pkey->max = (hkey_t)(to_timestamp);
-    if(pkey->max == 0)
-        return;
-    
-    pkey->max <<= BIT_LIMIT_NODE;
-    
-    pkey->max |= (hkey_t)(to_node_id);
-    pkey->max <<= BIT_LIMIT_INC;
-    
-    pkey->max |= (hkey_t)(NUMBER_LIMIT);
-}
-
 hkey_t yauid_get_key(yauid* yaobj)
 {
     hkey_t key = (hkey_t)(0);
     unsigned int count = 0;
-	
+    
     for(;;)
     {
         if((key = yauid_get_key_once(yaobj)) == (hkey_t)(0))
@@ -175,6 +104,17 @@ hkey_t yauid_get_key(yauid* yaobj)
 hkey_t yauid_get_key_once(yauid* yaobj)
 {
     hkey_t key = (hkey_t)(0), tmp = (hkey_t)(1), ltime = (hkey_t)(0);
+    
+    if(yaobj->node_id < LIMIT_MIN_NODE_ID)
+    {
+        yaobj->error = YAUID_ERROR_SHORT_NODE_ID;
+        return key;
+    }
+    else if(yaobj->node_id > NUMBER_LIMIT_NODE)
+    {
+        yaobj->error = YAUID_ERROR_LONG_NODE_ID;
+        return key;
+    }
     
     yaobj->error = YAUID_OK;
     
@@ -270,8 +210,8 @@ hkey_t yauid_get_key_once(yauid* yaobj)
         return (hkey_t)(0);
     }
     
-	yaobj->error = YAUID_OK;
-	
+    yaobj->error = YAUID_OK;
+    
     return key;
 }
 
@@ -291,7 +231,7 @@ yauid * yauid_init(const char *filepath_key, const char *filepath_node_id)
         
         if(filepath_node_id != NULL)
         {
-            if(access( filepath_node_id, F_OK ) == 0)
+            if(access( filepath_node_id, F_OK ) != -1)
             {
                 FILE* h_node_id;
                 if((h_node_id = fopen(filepath_node_id, "rb")))
@@ -327,6 +267,17 @@ yauid * yauid_init(const char *filepath_key, const char *filepath_node_id)
                     }
                     
                     free(text);
+                    
+                    if(yaobj->node_id < LIMIT_MIN_NODE_ID)
+                    {
+                        yaobj->error = YAUID_ERROR_SHORT_NODE_ID;
+                        return yaobj;
+                    }
+                    else if(yaobj->node_id > NUMBER_LIMIT_NODE)
+                    {
+                        yaobj->error = YAUID_ERROR_LONG_NODE_ID;
+                        return yaobj;
+                    }
                 }
             }
             else {
@@ -335,7 +286,7 @@ yauid * yauid_init(const char *filepath_key, const char *filepath_node_id)
             }
         }
         
-        if(access( yaobj->c_lockfile, F_OK ) != 0)
+        if(access( yaobj->c_lockfile, F_OK ) == -1)
         {
             if((yaobj->h_lockfile = fopen(yaobj->c_lockfile, "ab")) == 0)
             {
@@ -383,13 +334,12 @@ void yauid_set_node_id(yauid* yaobj, unsigned long node_id)
 {
     yaobj->error = YAUID_OK;
     
-    if(node_id < NUMBER_LIMIT_NODE)
-    {
+    if(node_id < LIMIT_MIN_NODE_ID)
+        yaobj->error = YAUID_ERROR_SHORT_NODE_ID;
+    else if(node_id > NUMBER_LIMIT_NODE)
+        yaobj->error = YAUID_ERROR_LONG_NODE_ID;
+    else
         yaobj->node_id = node_id;
-        return;
-    }
-    
-    yaobj->error = YAUID_ERROR_LONG_NODE_ID;
 }
 
 void yauid_set_sleep_usec(yauid* yaobj, useconds_t sleep_usec)
@@ -402,6 +352,78 @@ void yauid_set_try_count(yauid* yaobj, unsigned int try_count)
 {
     yaobj->error = YAUID_OK;
     yaobj->try_count = try_count;
+}
+
+time_t yauid_datetime_to_timestamp(const char *datetime)
+{
+    struct tm tm;
+    time_t epoch;
+    
+    if(strptime(datetime, "%Y-%m-%d %H:%M:%S", &tm) != NULL)
+        epoch = mktime(&tm);
+    else
+        epoch = (time_t)(0);
+    
+    return epoch;
+}
+
+void yauid_get_period_key_by_datetime(const char *from_datetime,
+                          const char *to_datetime,
+                          unsigned long long int from_node_id,
+                          unsigned long long int to_node_id,
+                          struct yauid_period_key *pkey)
+{
+    if(to_datetime == NULL)
+        to_datetime = from_datetime;
+    
+    yauid_get_period_key_by_timestamp(yauid_datetime_to_timestamp(from_datetime),
+                                      yauid_datetime_to_timestamp(to_datetime),
+                                      from_node_id, to_node_id,
+                                      pkey);
+}
+
+void yauid_get_period_key_by_timestamp(time_t from_timestamp,
+                          time_t to_timestamp,
+                          unsigned long long int from_node_id,
+                          unsigned long long int to_node_id,
+                          struct yauid_period_key *pkey)
+{
+    if(pkey == NULL)
+        return;
+    
+    pkey->max = 0;
+    pkey->min = 0;
+    
+    if(to_timestamp == 0)
+        to_timestamp = from_timestamp;
+    
+    if(from_node_id == 0)
+        from_node_id = 1;
+    
+    if(to_node_id == 0)
+        to_node_id = NUMBER_LIMIT_NODE;
+    
+    pkey->min = (hkey_t)(from_timestamp);
+    if(pkey->min == 0)
+        return;
+    
+    pkey->min <<= BIT_LIMIT_NODE;
+    
+    pkey->min |= (hkey_t)(from_node_id);
+    pkey->min <<= BIT_LIMIT_INC;
+    
+    pkey->min |= (hkey_t)(1);
+    
+    pkey->max = (hkey_t)(to_timestamp);
+    if(pkey->max == 0)
+        return;
+    
+    pkey->max <<= BIT_LIMIT_NODE;
+    
+    pkey->max |= (hkey_t)(to_node_id);
+    pkey->max <<= BIT_LIMIT_INC;
+    
+    pkey->max |= (hkey_t)(NUMBER_LIMIT);
 }
 
 #endif
